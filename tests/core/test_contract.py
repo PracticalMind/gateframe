@@ -1,5 +1,8 @@
 from typing import Any
 
+import pytest
+from pydantic import ValidationError
+
 from gateframe.core.contract import ValidationContract, ValidationResult
 from gateframe.core.failure import FailureMode, FailureResult
 from gateframe.core.rule import Rule
@@ -11,7 +14,11 @@ class _PassingRule(Rule):
 
 
 class _FailingRule(Rule):
-    def __init__(self, name: str = "failing_rule", mode: FailureMode = FailureMode.HARD_FAIL) -> None:
+    def __init__(
+        self,
+        name: str = "failing_rule",
+        mode: FailureMode = FailureMode.HARD_FAIL,
+    ) -> None:
         super().__init__(name)
         self._mode = mode
 
@@ -24,7 +31,6 @@ class _FailingRule(Rule):
 
 
 class TestValidationContract:
-
     def test_all_rules_pass(self) -> None:
         contract = ValidationContract("test", [_PassingRule("a"), _PassingRule("b")])
         result = contract.validate({"key": "value"})
@@ -68,11 +74,8 @@ class TestValidationContract:
     def test_result_is_frozen(self) -> None:
         contract = ValidationContract("test", [_PassingRule("a")])
         result = contract.validate({})
-        try:
+        with pytest.raises(ValidationError):
             result.passed = False  # type: ignore[misc]
-            assert False, "Should have raised"
-        except Exception:
-            pass
 
     def test_context_forwarded_to_rules(self) -> None:
         class _ContextRule(Rule):
@@ -91,7 +94,6 @@ class TestValidationContract:
 
 
 class TestValidationResult:
-
     def test_serialization_roundtrip(self) -> None:
         result = ValidationResult(
             passed=False,

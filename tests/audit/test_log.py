@@ -9,7 +9,9 @@ def _make_result(passed: bool = True, **overrides: object) -> ValidationResult:
         "contract_name": "test_contract",
         "rules_applied": 1,
         "rules_failed": 0 if passed else 1,
-        "failures": [] if passed else [
+        "failures": []
+        if passed
+        else [
             FailureResult(
                 rule_name="rule_a",
                 failure_mode=FailureMode.HARD_FAIL,
@@ -22,7 +24,6 @@ def _make_result(passed: bool = True, **overrides: object) -> ValidationResult:
 
 
 class TestAuditLog:
-
     def test_record_adds_entry(self) -> None:
         log = AuditLog()
         log.record(_make_result())
@@ -49,7 +50,6 @@ class TestAuditLog:
 
 
 class TestAuditEntry:
-
     def test_entry_structure(self) -> None:
         result = _make_result(passed=False)
         entry = AuditEntry(result)

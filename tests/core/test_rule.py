@@ -22,7 +22,6 @@ class _FailingRule(Rule):
 
 
 class TestRule:
-
     def test_cannot_instantiate_directly(self) -> None:
         with pytest.raises(TypeError):
             Rule("test")  # type: ignore[abstract]

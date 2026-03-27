@@ -10,7 +10,6 @@ class _SampleOutput(BaseModel):
 
 
 class TestStructuralRule:
-
     def _make_rule(self, **overrides: object) -> StructuralRule:
         defaults: dict = {"schema": _SampleOutput}
         defaults.update(overrides)

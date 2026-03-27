@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 
 import pytest
+from pydantic import ValidationError
 
 from gateframe.core.failure import FailureMode, FailureResult
 
 
 class TestFailureMode:
-
     def test_has_four_members(self) -> None:
         assert len(FailureMode) == 4
 
@@ -31,7 +31,6 @@ class TestFailureMode:
 
 
 class TestFailureResult:
-
     def _make_result(self, **overrides: object) -> FailureResult:
         defaults = {
             "rule_name": "test_rule",
@@ -76,18 +75,18 @@ class TestFailureResult:
 
     def test_is_frozen(self) -> None:
         result = self._make_result()
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             result.rule_name = "changed"  # type: ignore[misc]
 
     def test_missing_rule_name_raises(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             FailureResult(
                 failure_mode=FailureMode.HARD_FAIL,
                 message="something failed",
             )  # type: ignore[call-arg]
 
     def test_missing_message_raises(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             FailureResult(
                 rule_name="test",
                 failure_mode=FailureMode.HARD_FAIL,

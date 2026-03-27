@@ -11,7 +11,14 @@ logger = structlog.get_logger()
 
 
 class AuditEntry:
-    __slots__ = ("timestamp", "contract_name", "passed", "rules_applied", "rules_failed", "failures")
+    __slots__ = (
+        "timestamp",
+        "contract_name",
+        "passed",
+        "rules_applied",
+        "rules_failed",
+        "failures",
+    )
 
     def __init__(self, result: ValidationResult) -> None:
         self.timestamp = datetime.now(timezone.utc)
