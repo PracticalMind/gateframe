@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from gateframe.core.contract import ValidationContract, ValidationResult
+from gateframe.core.escalation import EscalationRoute
 from gateframe.core.failure import FailureMode, FailureResult
 from gateframe.core.rule import Rule
 
@@ -91,6 +92,40 @@ class TestValidationContract:
         contract = ValidationContract("auth", [_ContextRule("role_check")])
         assert contract.validate({}, role="admin").passed is True
         assert contract.validate({}, role="user").passed is False
+
+
+    def test_has_hard_fail_flag_set(self) -> None:
+        contract = ValidationContract("test", [_FailingRule("r1", FailureMode.HARD_FAIL)])
+        result = contract.validate({})
+        assert result.has_hard_fail is True
+        assert result.has_soft_fail is False
+
+    def test_has_soft_fail_flag_set(self) -> None:
+        contract = ValidationContract("test", [_FailingRule("r1", FailureMode.SOFT_FAIL)])
+        result = contract.validate({})
+        assert result.has_soft_fail is True
+        assert result.has_hard_fail is False
+
+    def test_no_failure_flags_when_passed(self) -> None:
+        contract = ValidationContract("test", [_PassingRule("a")])
+        result = contract.validate({})
+        assert result.has_hard_fail is False
+        assert result.has_soft_fail is False
+
+    def test_escalation_routes_stored(self) -> None:
+        contract = ValidationContract(
+            "test",
+            [_PassingRule("a")],
+            on_hard_fail=EscalationRoute.HUMAN_REVIEW,
+            on_soft_fail=EscalationRoute.FLAG_AND_CONTINUE,
+        )
+        assert contract.on_hard_fail is EscalationRoute.HUMAN_REVIEW
+        assert contract.on_soft_fail is EscalationRoute.FLAG_AND_CONTINUE
+
+    def test_escalation_routes_default_to_none(self) -> None:
+        contract = ValidationContract("test", [_PassingRule("a")])
+        assert contract.on_hard_fail is None
+        assert contract.on_soft_fail is None
 
 
 class TestValidationResult:

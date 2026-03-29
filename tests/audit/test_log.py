@@ -78,3 +78,31 @@ class TestAuditEntry:
         assert "rules_applied" in data
         assert "rules_failed" in data
         assert "failures" in data
+
+    def test_no_workflow_context_by_default(self) -> None:
+        entry = AuditEntry(_make_result())
+        assert entry.workflow_id is None
+        assert entry.confidence is None
+
+    def test_to_dict_excludes_workflow_when_absent(self) -> None:
+        entry = AuditEntry(_make_result())
+        data = entry.to_dict()
+        assert "workflow_id" not in data
+        assert "confidence" not in data
+
+    def test_workflow_context_recorded(self) -> None:
+        from gateframe.core.context import WorkflowContext
+
+        ctx = WorkflowContext("wf1", initial_confidence=0.9)
+        entry = AuditEntry(_make_result(), workflow_context=ctx)
+        assert entry.workflow_id == "wf1"
+        assert entry.confidence == 0.9
+
+    def test_to_dict_includes_workflow_when_present(self) -> None:
+        from gateframe.core.context import WorkflowContext
+
+        ctx = WorkflowContext("wf1")
+        entry = AuditEntry(_make_result(), workflow_context=ctx)
+        data = entry.to_dict()
+        assert data["workflow_id"] == "wf1"
+        assert data["confidence"] == 1.0
