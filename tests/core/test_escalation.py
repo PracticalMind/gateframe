@@ -68,7 +68,10 @@ class TestEscalationRouter:
     def test_no_escalation_on_pass(self) -> None:
         router = EscalationRouter()
         result = ValidationResult(
-            passed=True, contract_name="test", rules_applied=1, rules_failed=0,
+            passed=True,
+            contract_name="test",
+            rules_applied=1,
+            rules_failed=0,
         )
         assert router.route(result) is None
 

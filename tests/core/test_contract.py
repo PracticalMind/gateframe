@@ -93,7 +93,6 @@ class TestValidationContract:
         assert contract.validate({}, role="admin").passed is True
         assert contract.validate({}, role="user").passed is False
 
-
     def test_has_hard_fail_flag_set(self) -> None:
         contract = ValidationContract("test", [_FailingRule("r1", FailureMode.HARD_FAIL)])
         result = contract.validate({})

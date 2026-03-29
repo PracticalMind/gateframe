@@ -47,25 +47,33 @@ def _make_result(
 
 def _soft_failure(name: str = "rule_a") -> FailureResult:
     return FailureResult(
-        rule_name=name, failure_mode=FailureMode.SOFT_FAIL, message=f"{name}: soft fail.",
+        rule_name=name,
+        failure_mode=FailureMode.SOFT_FAIL,
+        message=f"{name}: soft fail.",
     )
 
 
 def _silent_failure(name: str = "rule_b") -> FailureResult:
     return FailureResult(
-        rule_name=name, failure_mode=FailureMode.SILENT_FAIL, message=f"{name}: silent fail.",
+        rule_name=name,
+        failure_mode=FailureMode.SILENT_FAIL,
+        message=f"{name}: silent fail.",
     )
 
 
 def _hard_failure(name: str = "rule_c") -> FailureResult:
     return FailureResult(
-        rule_name=name, failure_mode=FailureMode.HARD_FAIL, message=f"{name}: hard fail.",
+        rule_name=name,
+        failure_mode=FailureMode.HARD_FAIL,
+        message=f"{name}: hard fail.",
     )
 
 
 def _retry_failure(name: str = "rule_d") -> FailureResult:
     return FailureResult(
-        rule_name=name, failure_mode=FailureMode.RETRY, message=f"{name}: retry.",
+        rule_name=name,
+        failure_mode=FailureMode.RETRY,
+        message=f"{name}: retry.",
     )
 
 
