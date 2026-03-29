@@ -106,3 +106,58 @@ class TestAuditEntry:
         data = entry.to_dict()
         assert data["workflow_id"] == "wf1"
         assert data["confidence"] == 1.0
+
+
+class TestAuditLogExporters:
+    def test_no_exporters_backward_compatible(self) -> None:
+        log = AuditLog()
+        log.record(_make_result())
+        assert len(log.entries) == 1
+
+    def test_exporter_called_on_record(self, tmp_path: object) -> None:
+        from pathlib import Path
+
+        from gateframe.audit.exporters import JsonFileExporter
+
+        path = Path(str(tmp_path)) / "audit.jsonl"
+        exporter = JsonFileExporter(path)
+        log = AuditLog(exporters=[exporter])
+        log.record(_make_result())
+        exporter.flush()
+        assert path.read_text().strip() != ""
+        exporter.shutdown()
+
+    def test_flush_calls_exporters(self) -> None:
+        flushed = []
+
+        from gateframe.audit.exporters import AuditExporter
+
+        class MockExporter(AuditExporter):
+            def export(self, entry: object) -> None:
+                pass
+
+            def flush(self) -> None:
+                flushed.append(True)
+
+        log = AuditLog(exporters=[MockExporter()])
+        log.flush()
+        assert len(flushed) == 1
+
+    def test_shutdown_calls_exporters(self) -> None:
+        shut_down = []
+
+        from gateframe.audit.exporters import AuditExporter
+
+        class MockExporter(AuditExporter):
+            def export(self, entry: object) -> None:
+                pass
+
+            def flush(self) -> None:
+                pass
+
+            def shutdown(self) -> None:
+                shut_down.append(True)
+
+        log = AuditLog(exporters=[MockExporter()])
+        log.shutdown()
+        assert len(shut_down) == 1

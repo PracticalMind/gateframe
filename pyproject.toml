@@ -31,6 +31,17 @@ dev = [
     "pytest-cov>=4.0",
     "ruff>=0.4.0",
 ]
+anthropic = ["anthropic>=0.30.0"]
+openai = ["openai>=1.0.0"]
+litellm = ["litellm>=1.0.0"]
+otlp = [
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.20.0",
+]
+
+[project.scripts]
+gateframe = "gateframe.cli.main:cli"
 
 [tool.setuptools.packages.find]
 include = ["gateframe*"]

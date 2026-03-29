@@ -8,6 +8,7 @@ import structlog
 from gateframe.core.contract import ValidationResult
 
 if TYPE_CHECKING:
+    from gateframe.audit.exporters import AuditExporter
     from gateframe.core.context import WorkflowContext
 
 logger = structlog.get_logger()
@@ -62,8 +63,12 @@ class AuditEntry:
 
 
 class AuditLog:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        exporters: list[AuditExporter] | None = None,
+    ) -> None:
         self._entries: list[AuditEntry] = []
+        self._exporters: list[AuditExporter] = exporters or []
 
     def record(
         self,
@@ -82,6 +87,8 @@ class AuditLog:
             log_kwargs["workflow_id"] = entry.workflow_id
             log_kwargs["confidence"] = entry.confidence
         logger.info("validation_event", **log_kwargs)
+        for exporter in self._exporters:
+            exporter.export(entry)
 
     @property
     def entries(self) -> list[AuditEntry]:
@@ -89,3 +96,11 @@ class AuditLog:
 
     def clear(self) -> None:
         self._entries.clear()
+
+    def flush(self) -> None:
+        for exporter in self._exporters:
+            exporter.flush()
+
+    def shutdown(self) -> None:
+        for exporter in self._exporters:
+            exporter.shutdown()
