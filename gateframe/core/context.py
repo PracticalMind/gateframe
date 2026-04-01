@@ -119,6 +119,21 @@ class WorkflowContext:
                 penalty += self._silent_fail_penalty
         return penalty
 
+    def reset(self) -> None:
+        """Reset the workflow context to its initial state.
+        
+        This restores confidence to its initial value and clears the history.
+        Useful for reusing a context across multiple runs in tests or
+        long-running processes.
+        """
+        self.confidence = self._initial_confidence
+        self._history.clear()
+        logger.info(
+            "workflow_reset",
+            workflow_id=self.workflow_id,
+            initial_confidence=self._initial_confidence,
+        )
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "workflow_id": self.workflow_id,

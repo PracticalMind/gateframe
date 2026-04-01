@@ -180,6 +180,46 @@ class TestWorkflowContext:
         ctx.update(_make_result(passed=True))
         assert ctx.confidence == 1.0
 
+    def test_reset_restores_confidence(self) -> None:
+        ctx = WorkflowContext("wf1")
+        ctx.update(_make_result(passed=False, failures=[_soft_failure()]))
+        assert ctx.confidence == pytest.approx(0.85)
+        ctx.reset()
+        assert ctx.confidence == 1.0
+
+    def test_reset_clears_history(self) -> None:
+        ctx = WorkflowContext("wf1")
+        ctx.update(_make_result(passed=True))
+        ctx.update(_make_result(passed=False, failures=[_soft_failure()]))
+        assert ctx.step_count == 2
+        ctx.reset()
+        assert ctx.step_count == 0
+        assert ctx.history == []
+
+    def test_reset_with_custom_initial_confidence(self) -> None:
+        ctx = WorkflowContext("wf1", initial_confidence=0.9)
+        ctx.update(_make_result(passed=False, failures=[_soft_failure()]))
+        assert ctx.confidence == pytest.approx(0.75)
+        ctx.reset()
+        assert ctx.confidence == pytest.approx(0.9)
+
+    def test_reset_allows_reuse(self) -> None:
+        ctx = WorkflowContext("wf1")
+        # First run
+        ctx.update(_make_result(passed=False, failures=[_soft_failure()]))
+        ctx.update(_make_result(passed=False, failures=[_soft_failure()]))
+        assert ctx.confidence == pytest.approx(0.70)
+        assert ctx.step_count == 2
+        
+        # Reset and second run
+        ctx.reset()
+        assert ctx.confidence == 1.0
+        assert ctx.step_count == 0
+        
+        ctx.update(_make_result(passed=False, failures=[_silent_failure()]))
+        assert ctx.confidence == pytest.approx(0.9)
+        assert ctx.step_count == 1
+
 
 class TestStepRecord:
     def test_to_dict(self) -> None:
