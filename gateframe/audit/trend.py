@@ -34,7 +34,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# ── Data models ───────────────────────────────────────────────────────────────
+# Data models
 
 
 @dataclass
@@ -100,7 +100,7 @@ class TrendReport:
     regression_threshold: float = 0.02
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+# Internal helpers
 
 
 def _ols_slope(values: list[float]) -> float:
@@ -123,10 +123,11 @@ def _direction(slope: float, threshold: float = 0.001) -> str:
 
 def _is_valid_float(v: float) -> bool:
     import math
+
     return not (math.isnan(v) or math.isinf(v))
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
+# Public API
 
 
 class ContractTrendAnalyzer:
@@ -163,7 +164,7 @@ class ContractTrendAnalyzer:
         self._window = window
         self._regression_threshold = regression_threshold
 
-    # ── private ──────────────────────────────────────────────────────────────
+    # private
 
     def _read_entries(self) -> list[dict]:
         """Parse the JSONL file; skip malformed lines."""
@@ -182,9 +183,7 @@ class ContractTrendAnalyzer:
             pass
         return entries
 
-    def _build_run_summaries(
-        self, entries: list[dict]
-    ) -> dict[str, list[WorkflowRunSummary]]:
+    def _build_run_summaries(self, entries: list[dict]) -> dict[str, list[WorkflowRunSummary]]:
         """Group entries by workflow_id, compute pass rates per contract.
 
         Returns a dict mapping contract_name → list of WorkflowRunSummary,
@@ -235,7 +234,7 @@ class ContractTrendAnalyzer:
 
         return dict(contract_runs)
 
-    # ── public ───────────────────────────────────────────────────────────────
+    # public
 
     def analyze(self) -> TrendReport:
         """Run the trend analysis and return a :class:`TrendReport`.
@@ -251,9 +250,7 @@ class ContractTrendAnalyzer:
 
         contract_trends: list[ContractTrend] = []
         for contract_name, run_summaries in sorted(contract_runs.items()):
-            pass_rates = [
-                s.pass_rate for s in run_summaries if _is_valid_float(s.pass_rate)
-            ]
+            pass_rates = [s.pass_rate for s in run_summaries if _is_valid_float(s.pass_rate)]
             slope = _ols_slope(pass_rates)
             direction = _direction(slope)
             regressed = slope < -self._regression_threshold

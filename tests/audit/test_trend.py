@@ -12,7 +12,7 @@ from gateframe.audit.trend import (
     _ols_slope,
 )
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# Helpers
 
 
 def _write_audit(path: Path, entries: list[dict]) -> None:
@@ -39,7 +39,8 @@ def _entry(
     }
 
 
-# ── OLS helpers ───────────────────────────────────────────────────────────────
+# OLS helpers
+
 
 class TestOlsSlope:
     def test_increasing(self):
@@ -72,7 +73,8 @@ class TestDirection:
         assert _direction(0.0001) == "stable"
 
 
-# ── ContractTrendAnalyzer ─────────────────────────────────────────────────────
+# ContractTrendAnalyzer
+
 
 class TestContractTrendAnalyzer:
     def test_improving_contract(self, tmp_path):
@@ -116,8 +118,14 @@ class TestContractTrendAnalyzer:
         log = tmp_path / "audit.jsonl"
         # Entries without workflow_id should be silently skipped
         entries = [
-            {"timestamp": "2026-04-01T01:00:00+00:00", "contract_name": "c", "passed": True,
-             "rules_applied": 1, "rules_failed": 0, "failures": []},
+            {
+                "timestamp": "2026-04-01T01:00:00+00:00",
+                "contract_name": "c",
+                "passed": True,
+                "rules_applied": 1,
+                "rules_failed": 0,
+                "failures": [],
+            },
         ]
         _write_audit(log, entries)
         report = ContractTrendAnalyzer(log).analyze()
@@ -191,10 +199,13 @@ class TestContractTrendAnalyzer:
 
     def test_report_attributes(self, tmp_path):
         log = tmp_path / "audit.jsonl"
-        _write_audit(log, [
-            _entry("x", True, "r1"),
-            _entry("x", True, "r2", "2026-04-01T02:00:00+00:00"),
-        ])
+        _write_audit(
+            log,
+            [
+                _entry("x", True, "r1"),
+                _entry("x", True, "r2", "2026-04-01T02:00:00+00:00"),
+            ],
+        )
         report = ContractTrendAnalyzer(log, window=15, regression_threshold=0.05).analyze()
         assert report.window == 15
         assert report.regression_threshold == 0.05
