@@ -33,8 +33,6 @@ import statistics
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
-
 
 # ── Data models ───────────────────────────────────────────────────────────────
 

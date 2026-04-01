@@ -1,17 +1,16 @@
 """Tests for gateframe.audit.trend — ContractTrendAnalyzer."""
 
 import json
-import pytest
 from pathlib import Path
-from gateframe.audit.trend import (
-    ContractTrendAnalyzer,
-    ContractTrend,
-    TrendReport,
-    WorkflowRunSummary,
-    _ols_slope,
-    _direction,
-)
 
+import pytest
+
+from gateframe.audit.trend import (
+    ContractTrend,
+    ContractTrendAnalyzer,
+    _direction,
+    _ols_slope,
+)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -146,7 +145,7 @@ class TestContractTrendAnalyzer:
         entries = []
         for i in range(10):
             ts = f"2026-04-01T{i:02d}:00:00+00:00"
-            entries.append(_entry("c", True if i < 8 else False, f"run-{i}", ts))
+            entries.append(_entry("c", i < 8, f"run-{i}", ts))
         _write_audit(log, entries)
         report = ContractTrendAnalyzer(log, window=5).analyze()
         ct = report.contract_trends[0]
@@ -170,7 +169,8 @@ class TestContractTrendAnalyzer:
         with log.open("w") as f:
             f.write("not-json\n")
             f.write(json.dumps(_entry("billing", True, "run-1")) + "\n")
-            f.write(json.dumps(_entry("billing", True, "run-2", "2026-04-01T02:00:00+00:00")) + "\n")
+            entry = _entry("billing", True, "run-2", "2026-04-01T02:00:00+00:00")
+            f.write(json.dumps(entry) + "\n")
         report = ContractTrendAnalyzer(log).analyze()
         assert len(report.contract_trends) == 1
 
