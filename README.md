@@ -193,6 +193,26 @@ Each entry includes: timestamp, contract name, rules applied, rules failed, fail
 
 ---
 
+## Trend analysis
+
+`ContractTrendAnalyzer` reads an existing JSONL audit log and computes per-contract pass-rate trends across workflow runs. Use it to detect reliability regressions before they become incidents.
+
+```python
+from pathlib import Path
+from gateframe.audit.trend import ContractTrendAnalyzer
+
+analyzer = ContractTrendAnalyzer(Path("audit.jsonl"), window=20)
+report = analyzer.analyze()
+
+if report.any_regression:
+    for ct in report.regressions:
+        print(f"{ct.contract_name}: {ct.direction} (slope={ct.slope:.4f})")
+```
+
+The `window` parameter controls how many most-recent workflow runs are included. A contract is flagged as regressing when its pass-rate slope falls below `-0.02` (two percentage points per run) by default.
+
+---
+
 ## When to use gateframe
 
 Use it when:
@@ -243,6 +263,9 @@ gateframe inspect contracts.py
 
 # Replay an audit log
 gateframe replay audit.jsonl
+
+# Detect pass-rate regressions across workflow runs
+gateframe trend audit.jsonl --window 20
 ```
 
 ---
