@@ -1,5 +1,10 @@
 # Gateframe
 
+[![CI](https://github.com/PracticalMind/gateframe/actions/workflows/ci.yml/badge.svg)](https://github.com/PracticalMind/gateframe/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/gateframe)](https://pypi.org/project/gateframe/)
+[![Python](https://img.shields.io/pypi/pyversions/gateframe)](https://pypi.org/project/gateframe/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 Behavioral validation for LLM outputs in production workflows.
 
 Schema validation, "does this JSON have the right keys?", is a solved problem. Instructor, Pydantic AI, and similar tools handle it well. gateframe solves a different problem: **does this output behave correctly given the context it was generated in?** Does it stay within the decision boundaries this workflow requires? When it fails, does it fail in a way your system can recover from, or does it fail silently?
