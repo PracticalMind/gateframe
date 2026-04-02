@@ -180,6 +180,19 @@ class TestWorkflowContext:
         ctx.update(_make_result(passed=True))
         assert ctx.confidence == 1.0
 
+    def test_reset_restores_initial_confidence_and_clears_history(self) -> None:
+        ctx = WorkflowContext("wf1", initial_confidence=0.8)
+        ctx.update(_make_result(passed=False, failures=[_soft_failure()]))
+        assert ctx.confidence == pytest.approx(0.65)
+        assert ctx.step_count == 1
+
+        ctx.reset()
+
+        assert ctx.confidence == pytest.approx(0.8)
+        assert ctx.step_count == 0
+        assert ctx.history == []
+        assert ctx.threshold_breached is False
+
 
 class TestStepRecord:
     def test_to_dict(self) -> None:
