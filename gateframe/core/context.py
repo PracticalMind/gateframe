@@ -110,6 +110,17 @@ class WorkflowContext:
             threshold_breached=self.threshold_breached,
         )
 
+    def reset(self) -> None:
+        self.confidence = self._initial_confidence
+        self._history.clear()
+
+        logger.info(
+            "workflow_reset",
+            workflow_id=self.workflow_id,
+            confidence=self.confidence,
+            threshold_breached=self.threshold_breached,
+        )
+
     def _compute_penalty(self, result: ValidationResult) -> float:
         penalty = 0.0
         for failure in result.failures:
