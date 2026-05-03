@@ -94,6 +94,10 @@ class AuditLog:
     def entries(self) -> list[AuditEntry]:
         return list(self._entries)
 
+    @property
+    def entry_count(self) -> int:
+        return len(self._entries)
+
     def clear(self) -> None:
         self._entries.clear()
 

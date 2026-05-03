@@ -41,6 +41,16 @@ class TestAuditLog:
         log.clear()
         assert len(log.entries) == 0
 
+    def test_entry_count(self) -> None:
+        log = AuditLog()
+        assert log.entry_count == 0
+        log.record(_make_result())
+        assert log.entry_count == 1
+        log.record(_make_result())
+        assert log.entry_count == 2
+        log.clear()
+        assert log.entry_count == 0
+
     def test_entries_returns_copy(self) -> None:
         log = AuditLog()
         log.record(_make_result())
