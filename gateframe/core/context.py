@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from datetime import datetime, timezone
 from typing import Any
 
@@ -66,39 +67,49 @@ class WorkflowContext:
     ) -> None:
         self.workflow_id = workflow_id
         self.escalation_threshold = escalation_threshold
-        self.confidence = initial_confidence
+        self._confidence = initial_confidence
         self._initial_confidence = initial_confidence
         self._soft_fail_penalty = soft_fail_penalty
         self._silent_fail_penalty = silent_fail_penalty
         self._history: list[StepRecord] = []
+        self._lock = threading.Lock()
+
+    @property
+    def confidence(self) -> float:
+        with self._lock:
+            return self._confidence
 
     @property
     def history(self) -> list[StepRecord]:
-        return list(self._history)
+        with self._lock:
+            return list(self._history)
 
     @property
     def step_count(self) -> int:
-        return len(self._history)
+        with self._lock:
+            return len(self._history)
 
     @property
     def threshold_breached(self) -> bool:
-        return self.confidence < self.escalation_threshold
+        with self._lock:
+            return self._confidence < self.escalation_threshold
 
     def update(self, result: ValidationResult) -> None:
-        confidence_before = self.confidence
         penalty = self._compute_penalty(result)
-        self.confidence = max(0.0, self.confidence - penalty)
-
-        record = StepRecord(
-            step_index=len(self._history),
-            contract_name=result.contract_name,
-            passed=result.passed,
-            confidence_before=confidence_before,
-            confidence_after=self.confidence,
-            penalty_applied=penalty,
-            failure_modes=[f.failure_mode for f in result.failures],
-        )
-        self._history.append(record)
+        with self._lock:
+            confidence_before = self._confidence
+            self._confidence = max(0.0, self._confidence - penalty)
+            confidence_after = self._confidence
+            record = StepRecord(
+                step_index=len(self._history),
+                contract_name=result.contract_name,
+                passed=result.passed,
+                confidence_before=confidence_before,
+                confidence_after=confidence_after,
+                penalty_applied=penalty,
+                failure_modes=[f.failure_mode for f in result.failures],
+            )
+            self._history.append(record)
 
         logger.info(
             "workflow_step",
@@ -106,19 +117,20 @@ class WorkflowContext:
             step_index=record.step_index,
             contract=result.contract_name,
             passed=result.passed,
-            confidence=self.confidence,
+            confidence=confidence_after,
             threshold_breached=self.threshold_breached,
         )
 
     def reset(self) -> None:
-        self.confidence = self._initial_confidence
-        self._history.clear()
+        with self._lock:
+            self._confidence = self._initial_confidence
+            self._history.clear()
 
         logger.info(
             "workflow_reset",
             workflow_id=self.workflow_id,
-            confidence=self.confidence,
-            threshold_breached=self.threshold_breached,
+            confidence=self._initial_confidence,
+            threshold_breached=self._initial_confidence < self.escalation_threshold,
         )
 
     def _compute_penalty(self, result: ValidationResult) -> float:
@@ -131,11 +143,12 @@ class WorkflowContext:
         return penalty
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "workflow_id": self.workflow_id,
-            "confidence": self.confidence,
-            "escalation_threshold": self.escalation_threshold,
-            "threshold_breached": self.threshold_breached,
-            "step_count": self.step_count,
-            "history": [r.to_dict() for r in self._history],
-        }
+        with self._lock:
+            return {
+                "workflow_id": self.workflow_id,
+                "confidence": self._confidence,
+                "escalation_threshold": self.escalation_threshold,
+                "threshold_breached": self._confidence < self.escalation_threshold,
+                "step_count": len(self._history),
+                "history": [r.to_dict() for r in self._history],
+            }

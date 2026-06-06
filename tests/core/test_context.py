@@ -1,3 +1,4 @@
+import threading
 from typing import Any
 
 import pytest
@@ -192,6 +193,54 @@ class TestWorkflowContext:
         assert ctx.step_count == 0
         assert ctx.history == []
         assert ctx.threshold_breached is False
+
+
+    def test_concurrent_updates_do_not_corrupt_confidence(self) -> None:
+        ctx = WorkflowContext("wf_concurrent", soft_fail_penalty=0.01)
+        result = _make_result(passed=False, failures=[_soft_failure()])
+
+        def do_updates() -> None:
+            for _ in range(50):
+                ctx.update(result)
+
+        threads = [threading.Thread(target=do_updates) for _ in range(4)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert ctx.step_count == 200
+        assert 0.0 <= ctx.confidence <= 1.0
+
+    def test_concurrent_update_and_reset(self) -> None:
+        ctx = WorkflowContext("wf_reset_race")
+        result = _make_result(passed=False, failures=[_soft_failure()])
+
+        errors: list[Exception] = []
+
+        def do_updates() -> None:
+            try:
+                for _ in range(30):
+                    ctx.update(result)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        def do_resets() -> None:
+            try:
+                for _ in range(10):
+                    ctx.reset()
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        threads = [threading.Thread(target=do_updates) for _ in range(3)]
+        threads += [threading.Thread(target=do_resets) for _ in range(2)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors == []
+        assert 0.0 <= ctx.confidence <= 1.0
 
 
 class TestStepRecord:
