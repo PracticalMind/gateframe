@@ -140,3 +140,53 @@ class TestLlmJudge:
             llm_call=lambda prompt: "The result is PASS based on criteria",
         )
         assert judge({}) is True
+
+    def test_cache_disabled_by_default(self) -> None:
+        judge = LlmJudge(prompt_template="{output}", llm_call=lambda p: "PASS")
+        judge("x")
+        assert judge.cache_size == 0
+
+    def test_cache_stores_result(self) -> None:
+        calls: list[str] = []
+
+        def mock_llm(prompt: str) -> str:
+            calls.append(prompt)
+            return "PASS"
+
+        judge = LlmJudge(prompt_template="{output}", llm_call=mock_llm, cache=True)
+        assert judge("hello") is True
+        assert judge("hello") is True
+        assert len(calls) == 1  # second call served from cache
+        assert judge.cache_size == 1
+
+    def test_cache_different_prompts_not_shared(self) -> None:
+        calls: list[str] = []
+
+        def mock_llm(prompt: str) -> str:
+            calls.append(prompt)
+            return "PASS"
+
+        judge = LlmJudge(prompt_template="{output}", llm_call=mock_llm, cache=True)
+        judge("a")
+        judge("b")
+        assert len(calls) == 2
+        assert judge.cache_size == 2
+
+    def test_cache_evicts_lru_when_full(self) -> None:
+        judge = LlmJudge(
+            prompt_template="{output}",
+            llm_call=lambda p: "PASS",
+            cache=True,
+            max_cache_size=2,
+        )
+        judge("x")
+        judge("y")
+        judge("z")  # evicts "x"
+        assert judge.cache_size == 2
+
+    def test_cache_clear(self) -> None:
+        judge = LlmJudge(prompt_template="{output}", llm_call=lambda p: "PASS", cache=True)
+        judge("a")
+        assert judge.cache_size == 1
+        judge.cache_clear()
+        assert judge.cache_size == 0
