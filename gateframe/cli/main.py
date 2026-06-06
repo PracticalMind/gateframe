@@ -14,7 +14,9 @@ def cli() -> None:
     replay_parser = subparsers.add_parser("replay", help="Replay an audit log")
     replay_parser.add_argument("audit_file", help="Path to a JSON/JSONL audit log file")
 
-    trend_parser = subparsers.add_parser("trend", help="Analyze pass-rate trends across workflow runs")
+    trend_parser = subparsers.add_parser(
+        "trend", help="Analyze pass-rate trends across workflow runs"
+    )
     trend_parser.add_argument("audit_file", help="Path to a JSONL audit log file")
     trend_parser.add_argument(
         "--window",

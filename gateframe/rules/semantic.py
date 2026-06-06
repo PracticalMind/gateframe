@@ -75,10 +75,9 @@ class LlmJudge:
     def __call__(self, output: Any, **context: Any) -> bool:  # noqa: ANN401
         prompt = self._prompt_template.format(output=output, **context)
 
-        if self._cache is not None:
-            if prompt in self._cache:
-                self._cache.move_to_end(prompt)
-                return self._cache[prompt]
+        if self._cache is not None and prompt in self._cache:
+            self._cache.move_to_end(prompt)
+            return self._cache[prompt]
 
         result = self._passing_response.lower() in self._llm_call(prompt).strip().lower()
 

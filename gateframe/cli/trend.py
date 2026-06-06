@@ -29,7 +29,10 @@ def _print_report(report) -> None:  # noqa: ANN001
     from gateframe.audit.trend import TrendReport
 
     report: TrendReport
-    print(f"\nTrend Report  (window={report.window} runs, regression_threshold={report.regression_threshold})")
+    print(
+        f"\nTrend Report  (window={report.window} runs, "
+        f"regression_threshold={report.regression_threshold})"
+    )
     print("=" * 60)
 
     for ct in report.contract_trends:
