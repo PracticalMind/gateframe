@@ -48,10 +48,33 @@ class TestValidationContract:
         assert result.failures[0].rule_name == "b"
 
     def test_multiple_failures(self) -> None:
-        contract = ValidationContract("test", [_FailingRule("a"), _FailingRule("b")])
+        contract = ValidationContract(
+            "test",
+            [_FailingRule("a", FailureMode.SOFT_FAIL), _FailingRule("b", FailureMode.SOFT_FAIL)],
+        )
         result = contract.validate({})
         assert result.passed is False
         assert len(result.failures) == 2
+        assert result.rules_applied == 2
+        assert result.rules_failed == 2
+
+    def test_hard_fail_short_circuits_remaining_rules(self) -> None:
+        contract = ValidationContract(
+            "test",
+            [_FailingRule("a", FailureMode.HARD_FAIL), _FailingRule("b", FailureMode.SOFT_FAIL)],
+        )
+        result = contract.validate({})
+        assert result.has_hard_fail is True
+        assert result.rules_applied == 1
+        assert result.rules_failed == 1
+        assert result.failures[0].rule_name == "a"
+
+    def test_soft_fail_does_not_short_circuit(self) -> None:
+        contract = ValidationContract(
+            "test",
+            [_FailingRule("a", FailureMode.SOFT_FAIL), _FailingRule("b", FailureMode.HARD_FAIL)],
+        )
+        result = contract.validate({})
         assert result.rules_applied == 2
         assert result.rules_failed == 2
 

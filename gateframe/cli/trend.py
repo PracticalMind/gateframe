@@ -37,9 +37,7 @@ def _print_report(report) -> None:  # noqa: ANN001
 
     for ct in report.contract_trends:
         runs = len(ct.run_summaries)
-        avg_pass = (
-            sum(s.pass_rate for s in ct.run_summaries) / runs if runs else 0.0
-        )
+        avg_pass = sum(s.pass_rate for s in ct.run_summaries) / runs if runs else 0.0
         flag = " [REGRESSION]" if ct.regressed else ""
         print(f"\n  {ct.contract_name}{flag}")
         print(f"    direction : {ct.direction}")
