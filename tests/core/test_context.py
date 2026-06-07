@@ -194,7 +194,6 @@ class TestWorkflowContext:
         assert ctx.history == []
         assert ctx.threshold_breached is False
 
-
     def test_concurrent_updates_do_not_corrupt_confidence(self) -> None:
         ctx = WorkflowContext("wf_concurrent", soft_fail_penalty=0.01)
         result = _make_result(passed=False, failures=[_soft_failure()])
